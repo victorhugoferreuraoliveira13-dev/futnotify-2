@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <base href="/futnotify-2/">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111315">
+<title>FutNotify Brasil</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f5f6f7;--card:#fff;--ink:#17191c;--muted:#73777d;--line:#e4e6e8;--green:#16864a;--red:#c62828}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+header{background:#111315;color:#fff;border-bottom:3px solid var(--green)}
+.top{max-width:1050px;margin:auto;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:15px}
+.logo{font-weight:800;font-size:21px}.logo span{color:#36b96f}
+.status{font-size:12px;color:#bfc4c9}
+main{max-width:1050px;margin:auto;padding:22px 20px 45px}
+h1{font-size:28px;margin:0 0 5px}.sub{color:var(--muted);margin:0 0 20px}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+button,select{font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:10px 13px}
+button{font-weight:700;cursor:pointer}
+button.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.grid{display:grid;grid-template-columns:1fr 320px;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.cardhead{padding:15px 17px;border-bottom:1px solid var(--line);font-weight:800}
+.day{padding:9px 17px;background:#f0f2f3;color:#60656b;font-size:12px;font-weight:800;text-transform:uppercase}
+.game{padding:15px 17px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 95px 1fr;align-items:center;gap:10px}
+.game:last-child{border-bottom:0}
+.team{display:flex;align-items:center;gap:9px;font-weight:700}.away{justify-content:flex-end;text-align:right}
+.crest{width:34px;height:34px;object-fit:contain;display:block}.fallback{width:34px;height:34px;border-radius:50%;background:#eceff1;display:grid;place-items:center;font-size:11px;color:#666}
+.score{text-align:center;font-size:13px;color:var(--muted)}.score strong{display:block;color:var(--ink);font-size:15px;margin-bottom:3px}
+.live{color:var(--red)!important}
+.side{padding:16px}.side h3{font-size:15px;margin:0 0 13px}
+.setting{padding:12px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}
+.setting small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}
+.switch{width:45px;height:25px;position:relative;flex:none}.switch input{display:none}
+.slider{position:absolute;inset:0;background:#cdd1d5;border-radius:20px}.slider:before{content:"";position:absolute;width:19px;height:19px;left:3px;top:3px;background:white;border-radius:50%;transition:.18s}
+.switch input:checked+.slider{background:var(--green)}.switch input:checked+.slider:before{transform:translateX(20px)}
+.volume{width:100%;margin-top:10px}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:14px}
+#msg{margin-bottom:16px;padding:11px 13px;background:#fff8df;border:1px solid #f0df9c;border-radius:8px;font-size:13px;display:none}
+#msg.show{display:block}
+@media(max-width:760px){
+ main{padding:18px 12px 35px}.top{padding:13px 12px}.grid{grid-template-columns:1fr}
+ h1{font-size:24px}.game{grid-template-columns:1fr 70px 1fr;padding:13px 10px}.team{font-size:13px}.crest,.fallback{width:30px;height:30px}
+ .toolbar button,.toolbar select{flex:1;min-width:130px}
+}
+</style>
+</head>
+<body>
+<header><div class="top"><div class="logo">Fut<span>Notify</span> Brasil</div><div id="status" class="status">Notificações desativadas</div></div></header>
+<main>
+<h1>Jogos do Brasil</h1>
+<p class="sub">Resultados, horários e alertas das partidas brasileiras.</p>
+<div id="msg"></div>
+<div class="toolbar">
+<button id="notify" class="primary">Ativar notificações</button>
+<button id="test">Testar som</button>
+<select id="filter"><option value="todos">Todos os jogos</option><option value="brasileirao">Brasileirão</option><option value="copa">Copa do Brasil</option></select>
+</div>
+
+<div class="grid">
+<section class="card">
+<div class="cardhead">Partidas</div>
+<div class="day">Hoje</div>
+<div id="games"></div>
+</section>
+
+<aside class="card">
+<div class="side">
+<h3>Alertas</h3>
+<div class="setting"><div><b>Início</b><small>Apito + notificação</small></div><label class="switch"><input id="start" type="checkbox" checked><span class="slider"></span></label></div>
+<div class="setting"><div><b>Gol</b><small>Som de gol + notificação</small></div><label class="switch"><input id="goals" type="checkbox" checked><span class="slider"></span></label></div>
+<div class="setting"><div><b>Fim</b><small>Apito + notificação</small></div><label class="switch"><input id="end" type="checkbox" checked><span class="slider"></span></label></div>
+<div class="setting"><div><b>Som</b><small>Volume dos alertas</small></div></div>
+<input id="volume" class="volume" type="range" min="0" max="1" step=".05" value=".8">
+<p class="note">Os escudos são carregados pela internet. Os dois sons enviados por você ficam no mesmo pacote do site.</p>
+</div>
+</aside>
+</div>
+</main>
+
+<audio id="whistle" src="apito.mp3" preload="auto"></audio>
+<audio id="goal" src="gol.mp3" preload="auto"></audio>
+
+<script>
+"use strict";
+
+const gamesData=[
+ {home:"Flamengo",away:"Palmeiras",time:"19:00",comp:"brasileirao",homeLogo:"https://media.api-sports.io/football/teams/127.png",awayLogo:"https://media.api-sports.io/football/teams/121.png"},
+ {home:"Corinthians",away:"Grêmio",time:"21:30",comp:"brasileirao",homeLogo:"https://media.api-sports.io/football/teams/131.png",awayLogo:"https://media.api-sports.io/football/teams/130.png"},
+ {home:"São Paulo",away:"Santos",time:"20:00",comp:"brasileirao",homeLogo:"https://media.api-sports.io/football/teams/126.png",awayLogo:"https://media.api-sports.io/football/teams/128.png"},
+ {home:"Cruzeiro",away:"Atlético-MG",time:"18:30",comp:"brasileirao",homeLogo:"https://media.api-sports.io/football/teams/135.png",awayLogo:"https://media.api-sports.io/football/teams/1062.png"},
+ {home:"Bahia",away:"Sport",time:"16:00",comp:"copa",homeLogo:"https://media.api-sports.io/football/teams/118.png",awayLogo:"https://media.api-sports.io/football/teams/134.png"}
+];
+
+const $=id=>document.getElementById(id);
+function show(msg){$("msg").textContent=msg;$("msg").classList.add("show")}
+function crest(url,name){
+ const img=document.createElement("img");img.className="crest";img.alt="";img.src=url;
+ img.onerror=()=>{const f=document.createElement("span");f.className="fallback";f.textContent=name.slice(0,3).toUpperCase();img.replaceWith(f)}
+ return img;
+}
+function render(){
+ const box=$("games"),filter=$("filter").value;box.innerHTML="";
+ gamesData.filter(g=>filter==="todos"||g.comp===filter).forEach(g=>{
+   const row=document.createElement("div");row.className="game";
+   const home=document.createElement("div");home.className="team";home.append(crest(g.homeLogo,g.home),document.createTextNode(g.home));
+   const away=document.createElement("div");away.className="team away";away.append(document.createTextNode(g.away),crest(g.awayLogo,g.away));
+   const score=document.createElement("div");score.className="score";score.innerHTML="<strong>"+g.time+"</strong>Não iniciado";
+   row.append(home,score,away);box.append(row);
+ });
+}
+function sound(el){
+ try{el.volume=Number($("volume").value);el.currentTime=0;el.play().catch(()=>show("O navegador bloqueou o áudio. Clique em Testar som primeiro."))}
+ catch(e){show("Não foi possível reproduzir o som.")}
+}
+function notify(title,body){
+ if(!("Notification"in window)||Notification.permission!=="granted"){show("Ative as notificações primeiro.");return}
+ try{new Notification(title,{body,tag:"futnotify-brasil"})}catch(e){show("O navegador não permitiu a notificação.")}
+}
+async function ask(){
+ if(!("Notification"in window)){show("Este navegador não oferece notificações.");return}
+ try{
+   const p=await Notification.requestPermission();
+   if(p==="granted"){ $("status").textContent="Notificações ativadas"; notify("FutNotify Brasil","Alertas de futebol ativados."); }
+   else show("A permissão não foi concedida. Você pode alterar isso nas configurações do navegador.");
+ }catch(e){show("Não foi possível pedir a permissão agora.")}
+}
+$("notify").onclick=ask;
+$("test").onclick=()=>{sound($("whistle"));if(Notification.permission==="granted")notify("⚽ Teste","O som e as notificações estão prontos.");else ask()};
+$("volume").oninput=()=>{$("whistle").volume=Number($("volume").value);$("goal").volume=Number($("volume").value)};
+$("filter").onchange=render;
+if("Notification"in window&&Notification.permission==="granted")$("status").textContent="Notificações ativadas";
+render();
+</script>
+</body>
+</html>
